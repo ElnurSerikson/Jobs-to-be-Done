@@ -7,18 +7,22 @@ export interface ForceScore {
   text: string // абзац разбора, может содержать **жирные** фрагменты
 }
 
+export type OfferStrength = 'strong' | 'medium' | 'weak'
+
 export interface Offer {
   id: string
-  title: string // "Агрессор" | "Магнит" | "Стелс"
-  subtitle: string // "Упор на Push" / "Упор на Pull" / "Упор на Inertia"
-  text: string // текст офера для копирования
+  angle: string // "Агрессор" | "Магнит" | "Стелс" | "Гарант"
+  angleHint: string // "Упор на Push" | "Упор на Pull" | "Упор на Inertia" | "Упор на Anxiety"
+  headline: string // продающий УТП-заголовок (как H1 на лендинге), без кавычек
+  support: string // 1 короткая строка-расшифровка / механика
+  strength: OfferStrength // честная оценка убедительности угла под идею
 }
 
 export interface Analysis {
   score: number // агрегат 1.0–5.0 (1 знак), тревога входит инверсией (6 − балл)
   verdict: string // короткая фраза
   forces: ForceScore[] // ровно 4: push, pull, inertia, anxiety
-  offers: Offer[] // ровно 3
+  offers: Offer[] // ровно 4: push, pull, inertia, anxiety
   questions: string[] // ровно 3
 }
 

@@ -1,4 +1,5 @@
-import type { Analysis, Force, ForceScore, Offer, PivotResult } from '../types'
+import type { Analysis, Force, ForceScore, Offer, OfferStrength, PivotResult } from '../types'
+import { bandForForce, type Tone } from './score'
 
 // ───────────────────────── seeded RNG (детерминизм по тексту идеи) ─────────────────────────
 
@@ -119,28 +120,57 @@ const QUESTIONS: ((idea: string) => string)[] = [
     `Если бы «${i}» существовало сегодня, что должно было бы сломаться, чтобы вы за это всё-таки не заплатили?`,
 ]
 
-function buildOffers(idea: string): Offer[] {
-  const i = idea
-  return [
-    {
-      id: 'push',
-      title: 'Агрессор',
-      subtitle: 'Упор на Push',
-      text: `Хватит терпеть проблему, которую решает «${i}». Каждый день промедления стоит вам денег и нервов. Закройте дыру сейчас — пока это не сделал кто-то другой.`,
-    },
-    {
-      id: 'pull',
-      title: 'Магнит',
-      subtitle: 'Упор на Pull',
-      text: `Представьте результат: «${i}» уже работает, и вы получаете предсказуемый, измеримый эффект без лишних усилий. Это не «ещё один инструмент» — это новое состояние, в котором хочется остаться.`,
-    },
-    {
-      id: 'inertia',
-      title: 'Стелс',
-      subtitle: 'Упор на Inertia',
-      text: `Внедрите «${i}» за 5 минут, ничего не ломая в текущих процессах. Никакой миграции и обучения — просто включите и работайте как раньше, только лучше.`,
-    },
-  ]
+const OFFER_BUILD: Record<
+  Force,
+  { angle: string; angleHint: string; headline: string; support: (i: string) => string }
+> = {
+  push: {
+    angle: 'Агрессор',
+    angleHint: 'Упор на Push',
+    headline: 'Перестаньте терять деньги на старом способе',
+    support: (i) => `«${i}» закрывает эту дыру — пока за вас это не сделали конкуренты.`,
+  },
+  pull: {
+    angle: 'Магнит',
+    angleHint: 'Упор на Pull',
+    headline: 'Измеримый результат, а не «ещё один инструмент»',
+    support: (i) => `«${i}» даёт предсказуемый эффект, ради которого и платят.`,
+  },
+  inertia: {
+    angle: 'Стелс',
+    angleHint: 'Упор на Inertia',
+    headline: 'Запуск за 5 минут — без интеграций и обучения',
+    support: (i) => `«${i}» включается поверх текущих процессов, ломать ничего не надо.`,
+  },
+  anxiety: {
+    angle: 'Гарант',
+    angleHint: 'Упор на Anxiety',
+    headline: 'Не сработает — вернём деньги',
+    support: (i) => `Бесплатный тест и откат в один клик снимают риск перехода на «${i}».`,
+  },
+}
+
+const TONE_STRENGTH: Record<Tone, OfferStrength> = {
+  emerald: 'strong',
+  amber: 'medium',
+  red: 'weak',
+}
+
+// Мощность офера в моке выводим из силы (для тревоги — инверсия), чтобы было согласовано с разбором.
+function buildOffers(idea: string, forces: ForceScore[]): Offer[] {
+  return (['push', 'pull', 'inertia', 'anxiety'] as Force[]).map((force) => {
+    const meta = OFFER_BUILD[force]
+    const f = forces.find((x) => x.force === force)
+    const tone = f ? bandForForce(force, f.score).tone : 'amber'
+    return {
+      id: force,
+      angle: meta.angle,
+      angleHint: meta.angleHint,
+      headline: meta.headline,
+      support: meta.support(idea),
+      strength: TONE_STRENGTH[tone],
+    }
+  })
 }
 
 // ───────────────────────── публичный API (DEV-фолбэк; прод — Groq в api/) ─────────────────────────
@@ -182,7 +212,7 @@ export function analyzeIdea(idea: string): Promise<Analysis> {
     score,
     verdict,
     forces,
-    offers: buildOffers(short),
+    offers: buildOffers(short, forces),
     questions: QUESTIONS.map((q) => q(short)),
   }
 

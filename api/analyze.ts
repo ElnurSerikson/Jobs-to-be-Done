@@ -11,11 +11,18 @@ const FORCE_LABEL: Record<Force, string> = {
   anxiety: 'Тревога (Anxiety)',
 }
 
-// Оферы только для 3 сил (без anxiety) — это позиционирование, а не разбор.
-const OFFER_META: Record<'push' | 'pull' | 'inertia', { title: string; subtitle: string }> = {
-  push: { title: 'Агрессор', subtitle: 'Упор на Push' },
-  pull: { title: 'Магнит', subtitle: 'Упор на Pull' },
-  inertia: { title: 'Стелс', subtitle: 'Упор на Inertia' },
+// Оферы — по углу на каждую силу (позиционирование, а не разбор).
+const OFFER_META: Record<Force, { angle: string; angleHint: string }> = {
+  push: { angle: 'Агрессор', angleHint: 'Упор на Push' },
+  pull: { angle: 'Магнит', angleHint: 'Упор на Pull' },
+  inertia: { angle: 'Стелс', angleHint: 'Упор на Inertia' },
+  anxiety: { angle: 'Гарант', angleHint: 'Упор на Anxiety' },
+}
+
+const OFFER_STRENGTHS = ['strong', 'medium', 'weak'] as const
+type OfferStrengthValue = (typeof OFFER_STRENGTHS)[number]
+function clampStrength(v: unknown): OfferStrengthValue {
+  return OFFER_STRENGTHS.includes(v as OfferStrengthValue) ? (v as OfferStrengthValue) : 'medium'
 }
 
 const SYSTEM_PROMPT = `Ты — острый венчурный аналитик и злой, но честный ментор фаундеров. Разбираешь бизнес-идею по фреймворку Jobs-to-be-Done.
@@ -57,19 +64,28 @@ const SYSTEM_PROMPT = `Ты — острый венчурный аналитик
   },
   "verdict": "ОДНА короткая, хлёсткая и честная фраза-приговор по сути, без воды и смягчений, напр. 'Это самоубийство.' / 'Боль выдумана.' / 'Сильно, беги проверять на клиентах.'",
   "offers": {
-    "push": "оффер с упором на боль/срочность, 2-3 предложения, можно упомянуть саму идею",
-    "pull": "оффер с упором на измеримый результат",
-    "inertia": "оффер с упором на бесшовное внедрение"
+    "push":    { "headline": "продающий заголовок", "support": "одна строка-расшифровка", "strength": "strong|medium|weak" },
+    "pull":    { "headline": "...", "support": "...", "strength": "strong|medium|weak" },
+    "inertia": { "headline": "...", "support": "...", "strength": "strong|medium|weak" },
+    "anxiety": { "headline": "...", "support": "...", "strength": "strong|medium|weak" }
   },
   "questions": ["кастдев-вопрос клиенту 1", "вопрос 2", "вопрос 3"]
 }
+
+offers — это 4 ГОТОВЫХ продающих оффера, по одному углу на каждую силу. Каждый — как H1-заголовок на лендинге: коротко, дерзко, выгодно, без воды. headline — сам заголовок (без кавычек и слова «оффер»), support — одна строка-расшифровка или механика. Углы:
+- push (Агрессор): бьёт в боль, потери, срочность.
+- pull (Магнит): обещает желанный измеримый результат (по возможности с цифрой).
+- inertia (Стелс): подчёркивает лёгкий, бесшовный вход — без интеграций, миграций и обучения.
+- anxiety (Гарант): снимает страх и риск — гарантия, бесплатный тест, возврат денег, «не сработает — вернём».
+strength — ЧЕСТНАЯ оценка, насколько этот угол реально убедителен под ЭТУ идею (strong/medium/weak): слабая сила или натянутый аргумент → medium или weak, не завышай.
+Хорошо (headline): «Хватит сливать сделки на сырых продажниках». Плохо (вода): «Наш продукт улучшит процесс продаж и повысит эффективность».
 
 questions — это 3 вопроса для КАСТДЕВА: фаундер задаёт их ПОТЕНЦИАЛЬНОМУ КЛИЕНТУ (не себе!), чтобы проверить, реальна ли боль и готовы ли за решение платить. Спрашивай про ПРОШЛЫЙ опыт и ТЕКУЩЕЕ поведение человека: как он решает проблему сейчас, сколько времени/денег теряет, что уже пробовал и почему бросил. НЕ задавай гипотетических («стали бы вы…»), стратегических вопросов и вопросов про развитие/маркетинг продукта — это вопросы себе, а не клиенту.
 Хорошо: «Сколько часов в неделю вы сейчас тратите на X и во сколько это вам обходится?»
 Плохо: «Как вы планируете привлекать пользователей?» (это вопрос фаундеру себе, а не клиенту).`
 
 const ANALYSIS_FORCES: Force[] = ['push', 'pull', 'inertia', 'anxiety']
-const OFFER_FORCES: Array<'push' | 'pull' | 'inertia'> = ['push', 'pull', 'inertia']
+const OFFER_FORCES: Force[] = ['push', 'pull', 'inertia', 'anxiety']
 
 function clampScore(v: unknown): number {
   const n = Math.round(Number(v))
@@ -104,12 +120,17 @@ function assembleAnalysis(raw: any): Analysis {
     forces.reduce((s, f) => s + (f.force === 'anxiety' ? 6 - f.score : f.score), 0) / forces.length
   const score = Math.min(5, Math.max(1, Math.round(avg * 10) / 10))
 
-  const offerList = OFFER_FORCES.map((force) => ({
-    id: force,
-    title: OFFER_META[force].title,
-    subtitle: OFFER_META[force].subtitle,
-    text: plain(offers[force], 'Оффер недоступен.'),
-  }))
+  const offerList = OFFER_FORCES.map((force) => {
+    const o = (offers[force] ?? {}) as Record<string, unknown>
+    return {
+      id: force,
+      angle: OFFER_META[force].angle,
+      angleHint: OFFER_META[force].angleHint,
+      headline: plain(o.headline, 'Оффер недоступен.'),
+      support: plain(o.support, ''),
+      strength: clampStrength(o.strength),
+    }
+  })
 
   const questions = Array.isArray(raw?.questions)
     ? raw.questions.map((q: unknown) => plain(q)).filter(Boolean).slice(0, 3)

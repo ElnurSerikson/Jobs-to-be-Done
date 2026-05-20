@@ -7,7 +7,7 @@ export function OffersSection({ offers }: { offers: Offer[] }) {
       <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
         Варианты оферов
       </h2>
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2">
         {offers.map((offer) => (
           <OfferCard key={offer.id} offer={offer} />
         ))}

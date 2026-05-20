@@ -1,4 +1,4 @@
-import type { Force } from '../types'
+import type { Force, OfferStrength } from '../types'
 
 export type Tone = 'red' | 'amber' | 'emerald'
 
@@ -62,6 +62,19 @@ export function favorableScore(force: Force, score: number): number {
 // Цвет дайла силы: для тревоги красим по инверсии (5 тревоги → красный).
 export function bandForForce(force: Force, score: number): ScoreBand {
   return scoreBand(favorableScore(force, score))
+}
+
+// Тег мощности офера: лейбл + акцентные классы (зелёный/жёлтый/красный).
+const STRENGTH_TONE: Record<OfferStrength, { label: string; tone: Tone }> = {
+  strong: { label: 'Сильный', tone: 'emerald' },
+  medium: { label: 'Средний', tone: 'amber' },
+  weak: { label: 'Слабый', tone: 'red' },
+}
+
+export function strengthMeta(s: OfferStrength): { label: string; accent: string; accentBg: string } {
+  const { label, tone } = STRENGTH_TONE[s] ?? STRENGTH_TONE.medium
+  const band = BANDS[tone]
+  return { label, accent: band.accent, accentBg: band.accentBg }
 }
 
 export function formatScore(score: number): string {
