@@ -35,9 +35,9 @@
   --sidebar-accent-foreground: #333333;
   --sidebar-border: #d4d4d4;
   --sidebar-ring: #34a85a;
-  --font-sans: Plus Jakarta Sans, sans-serif;
-  --font-serif: Source Serif 4, serif;
-  --font-mono: JetBrains Mono, monospace;
+  --font-sans: 'Fira Sans', sans-serif;
+  --font-serif: 'Fira Sans', sans-serif;
+  --font-mono: 'Fira Sans', sans-serif;
   --radius: 0.5rem;
   --shadow-x: 0;
   --shadow-y: 1px;
@@ -90,9 +90,9 @@
   --sidebar-accent-foreground: #e5e5e5;
   --sidebar-border: #444444;
   --sidebar-ring: #34a85a;
-  --font-sans: Plus Jakarta Sans, sans-serif;
-  --font-serif: Source Serif 4, serif;
-  --font-mono: JetBrains Mono, monospace;
+  --font-sans: 'Fira Sans', sans-serif;
+  --font-serif: 'Fira Sans', sans-serif;
+  --font-mono: 'Fira Sans', sans-serif;
   --radius: 0.5rem;
   --shadow-x: 0;
   --shadow-y: 1px;
