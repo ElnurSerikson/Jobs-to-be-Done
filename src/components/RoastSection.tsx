@@ -20,23 +20,27 @@ function BoldText({ text }: { text: string }) {
 
 export function RoastSection({ forces }: { forces: ForceScore[] }) {
   return (
-    <section className="rounded-2xl border border-border bg-card p-6">
+    <section>
       <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
         Суровый разбор
       </h2>
-      <div className="space-y-5">
+      <div className="grid gap-4 sm:grid-cols-2">
         {forces.map((f) => (
-          <div key={f.force} className="flex gap-4">
-            <ScoreDial score={f.score} size="sm" outOfFive />
+          <article
+            key={f.force}
+            className="flex gap-4 rounded-xl border border-border bg-card p-4"
+          >
+            <ScoreDial score={f.score} size="sm" outOfFive invert={f.force === 'anxiety'} />
             <div>
-              <p className="font-semibold text-foreground">
-                {f.label} · <span className="font-mono">{f.score}/5</span>
+              <p className="font-semibold text-foreground">{f.label}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                <span className="font-mono">{f.score}/5</span> баллов
               </p>
-              <p className="mt-1 leading-relaxed text-muted-foreground">
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 <BoldText text={f.text} />
               </p>
             </div>
-          </div>
+          </article>
         ))}
       </div>
     </section>

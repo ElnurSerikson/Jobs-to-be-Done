@@ -55,7 +55,7 @@ export default function App() {
 
   return (
     <main
-      className={`mx-auto flex min-h-screen w-full max-w-4xl flex-col px-4 py-10 sm:px-6 ${
+      className={`mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 py-10 sm:px-6 ${
         isIdle ? 'justify-center' : 'justify-start'
       }`}
     >

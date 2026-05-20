@@ -8,7 +8,7 @@ export function VerdictSection({ analysis }: { analysis: Analysis }) {
   return (
     <section className="flex items-center gap-5">
       <div className={`rounded-full p-1 ring-2 ${band.ring}`}>
-        <ScoreDial score={analysis.score} size="lg" />
+        <ScoreDial score={analysis.score} size="lg" unit />
       </div>
       <div>
         <p className={`text-xs font-semibold uppercase tracking-wide ${band.accent}`}>

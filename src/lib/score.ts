@@ -1,3 +1,5 @@
+import type { Force } from '../types'
+
 export type Tone = 'red' | 'amber' | 'emerald'
 
 export interface ScoreBand {
@@ -49,6 +51,17 @@ export function toneForScore(score: number): Tone {
 
 export function scoreBand(score: number): ScoreBand {
   return BANDS[toneForScore(score)]
+}
+
+// Тревога — резистор: выше балл = больше тревоги = хуже. Для агрегата и цвета берём
+// «благоприятную» величину (инверсию), чтобы высокая тревога давала красный и снижала итог.
+export function favorableScore(force: Force, score: number): number {
+  return force === 'anxiety' ? 6 - score : score
+}
+
+// Цвет дайла силы: для тревоги красим по инверсии (5 тревоги → красный).
+export function bandForForce(force: Force, score: number): ScoreBand {
+  return scoreBand(favorableScore(force, score))
 }
 
 export function formatScore(score: number): string {
