@@ -4,15 +4,21 @@ import type { Analysis, PivotResult } from '../src/types'
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions'
 const MODEL = 'llama-3.3-70b-versatile'
 
-const SYSTEM_PROMPT = `Ты — циничный, но точный разборщик бизнес-идей по Jobs-to-be-Done.
-Тебе дают идею и её текущую оценку. Предложи КОНКРЕТНЫЕ способы докрутить идею до 5.0:
-усилить слабую силу (push/pull/inertia), сузить до горящего сегмента, сменить покупателя/ЛПР,
-урезать до одного ценного действия и т.п. Каждый вариант — практичный и применимый завтра.
+const SYSTEM_PROMPT = `Ты — острый венчурный аналитик. Тебе дают бизнес-идею и её разбор по Jobs-to-be-Done с баллами по 4 силам (push/боль, pull/магнит, inertia/лёгкость, anxiety/тревога). Дай РОВНО 3 совета, как докрутить ИМЕННО эту идею до 5.0.
 
-Стиль: жёстко, по делу. ЯЗЫК: пиши СТРОГО на русском — никаких иностранных слов, латиницы (кроме терминов Push, Pull, Inertia, CRM, MVP, B2B), иероглифов или случайных символов. Сомневаешься в слове — бери простой русский синоним.
+Правила:
+1. Бей в САМЫЕ СЛАБЫЕ силы из разбора (низкий балл; для тревоги — высокий). Усиливай дыры, а не то, что и так сильно.
+2. Каждый совет — КОНКРЕТНОЕ изменение под ЭТУ идею: что именно поменять в продукте, модели или аудитории и какую слабую силу это поднимет. Не общие мантры.
+3. Только реальные, применимые ходы — без фантазий и «прорывных» лозунгов. Не усиливает реальную слабость этой идеи — не предлагай.
+4. Три РАЗНЫХ по сути приёма, а не три формулировки одного. НЕ давай дежурных шаблонов, которые подходят к любой идее.
+
+Стиль: жёстко, по делу. ЯЗЫК: пиши СТРОГО на русском — без иностранных слов, латиницы (кроме Push, Pull, Inertia, CRM, MVP, B2B), иероглифов и случайных символов.
+
+Пример хорошо (слабый Pull у CRM-квалификатора): title «Привязать к деньгам, а не к удобству» — text «Меняй обещание с "удобнее квалифицировать" на "+X закрытых сделок к выручке" — тогда результат перестаёт быть "приятно иметь" и Pull растёт.»
+Пример плохо (ленивая мантра, НЕ пиши так): «Сузить до одного сегмента рынка».
 
 Верни ТОЛЬКО валидный JSON (json) без markdown-обёртки, строго по схеме:
-{ "variants": [ { "title": "краткий заголовок приёма", "text": "1-2 предложения: как именно докрутить" } ] }
+{ "variants": [ { "title": "краткий заголовок приёма", "text": "1-2 предложения: что именно сделать и какую слабую силу это усилит" } ] }
 Ровно 3 варианта.`
 
 function str(v: unknown, fallback = ''): string {
@@ -54,11 +60,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'idea is required' })
   }
 
-  const scoreLine = analysis
-    ? `Текущая оценка: ${analysis.score}/5. Силы: ${analysis.forces
-        .map((f) => `${f.label} ${f.score}/5`)
-        .join(', ')}.`
-    : ''
+  let scoreLine = ''
+  if (analysis) {
+    const fav = (f: Analysis['forces'][number]) => (f.force === 'anxiety' ? 6 - f.score : f.score)
+    const forcesLine = analysis.forces.map((f) => `${f.label} ${f.score}/5`).join(', ')
+    const weak = [...analysis.forces]
+      .sort((a, b) => fav(a) - fav(b))
+      .slice(0, 2)
+      .map((f) => f.label)
+      .join(' и ')
+    scoreLine = `Текущая оценка: ${analysis.score}/5. Силы: ${forcesLine}. Слабее всего: ${weak} — бей сюда в первую очередь.`
+  }
 
   try {
     const groqRes = await fetch(GROQ_URL, {
@@ -69,7 +81,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       },
       body: JSON.stringify({
         model: MODEL,
-        temperature: 0.5,
+        temperature: 0.65,
         max_tokens: 1024,
         response_format: { type: 'json_object' },
         messages: [
