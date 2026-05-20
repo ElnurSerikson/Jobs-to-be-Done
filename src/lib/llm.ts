@@ -33,3 +33,24 @@ export async function pivotIdea(idea: string, analysis: Analysis): Promise<Pivot
     throw e
   }
 }
+
+// «Подкинь идею» — на случай, если у юзера нет своей. Всегда возвращает строку:
+// при любом сбое сети/эндпоинта берём запасную из локального списка.
+const FALLBACK_IDEAS = [
+  'Подписка на доставку случайного носка раз в неделю',
+  'Приложение, которое лает на тебя, когда ты ленишься',
+  'Соцсеть, где постить можно только в 3 часа ночи',
+  'Умный холодильник, который стыдит за ночные перекусы',
+  'Сервис аренды комнатных растений на один вечер',
+  'Будильник, который звонит голосом твоей мамы',
+  'Маркетплейс для обмена нереализованными планами на выходные',
+]
+
+export async function suggestIdea(): Promise<string> {
+  try {
+    const { idea } = await postJSON<{ idea: string }>('/api/idea', {})
+    return idea?.trim() || FALLBACK_IDEAS[Math.floor(Math.random() * FALLBACK_IDEAS.length)]
+  } catch {
+    return FALLBACK_IDEAS[Math.floor(Math.random() * FALLBACK_IDEAS.length)]
+  }
+}

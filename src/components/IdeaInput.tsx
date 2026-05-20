@@ -30,12 +30,12 @@ export const IdeaInput = forwardRef<HTMLTextAreaElement, IdeaInputProps>(
           onKeyDown={handleKeyDown}
           disabled={loading}
           rows={3}
-          placeholder="Опиши свою идею. Чем конкретнее — тем жёстче прожарка."
+          placeholder="Опиши свою идею. Чем конкретнее — тем лучше прожарка."
           aria-label="Идея для анализа"
           className="w-full resize-none rounded-xl border border-border bg-card px-4 py-3 text-base leading-relaxed text-foreground shadow-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:opacity-60"
         />
 
-        <div className="flex justify-end">
+        <div className="flex justify-center">
           <button
             type="button"
             onClick={onSubmit}
