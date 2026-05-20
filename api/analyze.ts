@@ -22,7 +22,8 @@ const SYSTEM_PROMPT = `Ты — циничный, но точный разбор
 - pull (Магнит): насколько желанен и осязаем результат после покупки.
 - inertia (Лёгкость): насколько легко и безопасно начать (выше балл — ниже трение, страх и стоимость перехода).
 
-Стиль: жёстко, по делу, без воды, на русском. Ключевые косяки/инсайты оборачивай в **двойные звёздочки**.
+Стиль: жёстко, по делу, без воды, на русском. В разборе (roast) ключевые косяки/инсайты оборачивай в **двойные звёздочки**.
+ВАЖНО: в verdict, offers и questions звёздочек НЕ ставь — это чистый текст, его копируют клиентам как есть.
 
 Верни ТОЛЬКО валидный JSON (json) без markdown-обёртки, строго по схеме:
 {
@@ -53,6 +54,11 @@ function str(v: unknown, fallback = ''): string {
   return typeof v === 'string' && v.trim() ? v.trim() : fallback
 }
 
+// Чистый текст без markdown-звёздочек — для оферов/вопросов/вердикта (их копируют как есть).
+function plain(v: unknown, fallback = ''): string {
+  return str(v, fallback).replace(/\*\*/g, '')
+}
+
 // Собираем строгий Analysis из «сырого» ответа LLM — фиксированные ярлыки/тайтлы гарантируют инварианты UI.
 function assembleAnalysis(raw: any): Analysis {
   const scores = raw?.scores ?? {}
@@ -73,17 +79,17 @@ function assembleAnalysis(raw: any): Analysis {
     id: force,
     title: OFFER_META[force].title,
     subtitle: OFFER_META[force].subtitle,
-    text: str(offers[force], 'Оффер недоступен.'),
+    text: plain(offers[force], 'Оффер недоступен.'),
   }))
 
   const questions = Array.isArray(raw?.questions)
-    ? raw.questions.map((q: unknown) => str(q)).filter(Boolean).slice(0, 3)
+    ? raw.questions.map((q: unknown) => plain(q)).filter(Boolean).slice(0, 3)
     : []
   while (questions.length < 3) questions.push('Готовы ли клиенты платить за это уже сегодня?')
 
   return {
     score,
-    verdict: str(raw?.verdict, 'Разбор завершён.'),
+    verdict: plain(raw?.verdict, 'Разбор завершён.'),
     forces,
     offers: offerList,
     questions,
@@ -114,7 +120,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       },
       body: JSON.stringify({
         model: MODEL,
-        temperature: 0.85,
+        temperature: 0.7,
         max_tokens: 2048,
         response_format: { type: 'json_object' },
         messages: [

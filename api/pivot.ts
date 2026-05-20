@@ -16,7 +16,8 @@ const SYSTEM_PROMPT = `Ты — циничный, но точный разбор
 Ровно 3 варианта.`
 
 function str(v: unknown, fallback = ''): string {
-  return typeof v === 'string' && v.trim() ? v.trim() : fallback
+  const s = typeof v === 'string' && v.trim() ? v.trim() : fallback
+  return s.replace(/\*\*/g, '')
 }
 
 function assemblePivot(raw: any): PivotResult {
@@ -68,7 +69,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       },
       body: JSON.stringify({
         model: MODEL,
-        temperature: 0.85,
+        temperature: 0.7,
         max_tokens: 1024,
         response_format: { type: 'json_object' },
         messages: [
