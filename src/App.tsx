@@ -1,5 +1,4 @@
 import { useCallback, useRef, useState } from 'react'
-import { Loader2, Sparkles } from 'lucide-react'
 import type { Analysis } from './types'
 import { analyzeIdea, suggestIdea } from './lib/llm'
 import { IdeaInput } from './components/IdeaInput'
@@ -60,24 +59,6 @@ export default function App() {
         isIdle ? 'justify-center' : 'justify-start'
       }`}
     >
-      {isIdle && (
-        <button
-          type="button"
-          onClick={handleSuggest}
-          disabled={suggesting}
-          title="Нет идеи? Пусть ИИ подкинет"
-          aria-label="Подкинуть случайную идею от ИИ"
-          className="fixed right-4 top-4 z-10 flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-sm font-medium text-muted-foreground shadow-sm transition-colors hover:border-accent/50 hover:text-foreground disabled:opacity-60"
-        >
-          {suggesting ? (
-            <Loader2 className="h-4 w-4 animate-spin text-accent" aria-hidden />
-          ) : (
-            <Sparkles className="h-4 w-4 text-accent" aria-hidden />
-          )}
-          AI
-        </button>
-      )}
-
       <header className="mb-8 text-center">
         <h1 className="text-3xl font-bold tracking-tight text-foreground">
           Прожарка идеи
@@ -93,6 +74,8 @@ export default function App() {
           value={idea}
           onChange={setIdea}
           onSubmit={runAnalysis}
+          onSuggest={handleSuggest}
+          suggesting={suggesting}
           loading={status === 'loading'}
         />
       )}
