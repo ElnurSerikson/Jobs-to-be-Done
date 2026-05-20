@@ -14,37 +14,41 @@ export function StepNav({ steps, current, onPrev, onNext, onReset }: StepNavProp
   const isLast = current === steps.length - 1
 
   return (
-    <div className={`flex items-center gap-3 ${isFirst ? 'justify-end' : 'justify-between'}`}>
-      {!isFirst && (
-        <button
-          type="button"
-          onClick={onPrev}
-          className="flex items-center gap-2 rounded-xl border border-border px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-card"
-        >
-          <ArrowLeft className="h-4 w-4" aria-hidden />
-          {steps[current - 1].label}
-        </button>
-      )}
+    <div className="flex flex-col gap-4">
+      <div className={`flex items-center gap-3 ${isFirst ? 'justify-end' : 'justify-between'}`}>
+        {!isFirst && (
+          <button
+            type="button"
+            onClick={onPrev}
+            className="flex items-center gap-2 rounded-xl border border-border px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-card"
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden />
+            {steps[current - 1].label}
+          </button>
+        )}
 
-      {isLast ? (
+        {!isLast && (
+          <button
+            type="button"
+            onClick={onNext}
+            className="flex items-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-accent-foreground shadow-sm transition-all hover:bg-accent/90 active:scale-[0.98]"
+          >
+            {steps[current + 1].label}
+            <ArrowRight className="h-4 w-4" aria-hidden />
+          </button>
+        )}
+      </div>
+
+      <div className="flex justify-center">
         <button
           type="button"
           onClick={onReset}
-          className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 active:scale-[0.98]"
+          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-card hover:text-foreground"
         >
-          <RotateCcw className="h-4 w-4" aria-hidden />
+          <RotateCcw className="h-3.5 w-3.5" aria-hidden />
           Начать заново
         </button>
-      ) : (
-        <button
-          type="button"
-          onClick={onNext}
-          className="flex items-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-accent-foreground shadow-sm transition-all hover:bg-accent/90 active:scale-[0.98]"
-        >
-          {steps[current + 1].label}
-          <ArrowRight className="h-4 w-4" aria-hidden />
-        </button>
-      )}
+      </div>
     </div>
   )
 }
