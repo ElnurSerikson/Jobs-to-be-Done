@@ -18,12 +18,18 @@ export interface Offer {
   strength: OfferStrength // честная оценка убедительности угла под идею
 }
 
+export interface QuestionGroup {
+  force: Force
+  label: string // ярлык силы: "Боль (Push)" и т.д.
+  questions: string[] // 2–3 кастдев-вопроса для проверки этой силы
+}
+
 export interface Analysis {
   score: number // агрегат 1.0–5.0 (1 знак), тревога входит инверсией (6 − балл)
   verdict: string // короткая фраза
   forces: ForceScore[] // ровно 4: push, pull, inertia, anxiety
   offers: Offer[] // ровно 4: push, pull, inertia, anxiety
-  questions: string[] // ровно 3
+  questions: QuestionGroup[] // 4 группы по силам, по 2–3 вопроса (≈12)
 }
 
 export interface PivotVariant {
